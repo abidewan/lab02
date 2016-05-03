@@ -1,0 +1,54 @@
+---
+# set these parameters to control the region, keypair, and AMI that are launched
+ec2_region: ap-southeast-2
+instances_keypair: linadmin 
+image_id: ami-f2210191
+
+# security groups to be created
+security_groups:
+  - name: ssh_TEMP
+    desc: the security group for the jumphost dsetest
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+  - name: web_TEMP
+    desc: the security group for the web server 
+    rules:
+      - proto: tcp
+        from_port: "80"
+        to_port: "80"
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: "443"
+        to_port: "443"
+        cidr_ip: 0.0.0.0/0
+  
+# Instances to launch be launched.
+# If you re-run the playbook after modifying exact_count,
+# instances will be terminated if the actual count > exact_count,
+# or new instances will be launched if actual count < exact_count.
+
+ec2_instances:
+  - instance_type: t2.micro
+    image: "{{ image_id }}"
+    assign_public_ip: true
+    keypair: "{{instances_keypair}}"
+    group: ['ssh_TEMP']
+    instance_tags: 
+        Name: dev_jumphost
+    exact_count: 0
+    count_tag: 
+        Name: dev_jumphost
+
+  - instance_type: t2.micro
+    image: "{{ image_id }}"
+    keypair: "{{instances_keypair}}"
+    group: ['web_TEMP', 'ssh_TEMP'] 
+    instance_tags: 
+        Name: web
+    exact_count: 0 
+    count_tag: 
+        Name: web
